@@ -1,0 +1,676 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2870
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <!DOCTYPE html>\
+<html lang="es">\
+<head>\
+    <meta charset="UTF-8">\
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">\
+    <title>Gu\'eda Interactiva - Las Vacunas</title>\
+    <style>\
+        /* =========================================\
+           IDENTIDAD VISUAL - COLEGIO ESCOLARIS\
+           ========================================= */\
+        :root \{\
+            --color-naranja: #db6015;\
+            --color-amarillo: #f7be00;\
+            --color-azul-oscuro: #244b5a;\
+            --color-rojo: #993921;\
+            --color-fondo-claro: #f0f8ff;\
+            --color-blanco: #ffffff;\
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\
+        \}\
+\
+        * \{\
+            box-sizing: border-box;\
+            margin: 0;\
+            padding: 0;\
+        \}\
+\
+        body \{\
+            font-family: var(--font-family);\
+            background-color: #e0e8f0; /* Fondo externo para contrastar el iframe */\
+            display: flex;\
+            justify-content: center;\
+            align-items: center;\
+            min-height: 100vh;\
+            overflow: hidden; /* Evita scroll en la ventana principal */\
+        \}\
+\
+        /* Contenedor Principal (Simula el visor en Canvas) */\
+        #app-container \{\
+            width: 100%;\
+            max-width: 900px;\
+            height: 100vh;\
+            max-height: 600px;\
+            background-color: var(--color-fondo-claro);\
+            position: relative;\
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);\
+            border-radius: 12px;\
+            overflow: hidden;\
+            display: flex;\
+            flex-direction: column;\
+        \}\
+\
+        /* =========================================\
+           NAVEGACI\'d3N (FLECHAS)\
+           ========================================= */\
+        .nav-btn \{\
+            position: absolute;\
+            top: 50%;\
+            transform: translateY(-50%);\
+            background-color: var(--color-naranja);\
+            color: var(--color-blanco);\
+            border: none;\
+            width: 50px;\
+            height: 80px;\
+            font-size: 2rem;\
+            cursor: pointer;\
+            z-index: 100;\
+            display: flex;\
+            justify-content: center;\
+            align-items: center;\
+            border-radius: 8px;\
+            transition: background-color 0.3s, transform 0.1s;\
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);\
+        \}\
+\
+        .nav-btn:hover \{\
+            background-color: #c05010;\
+        \}\
+        \
+        .nav-btn:active \{\
+            transform: translateY(-50%) scale(0.95);\
+        \}\
+\
+        #prevBtn \{ left: 10px; \}\
+        #nextBtn \{ right: 10px; \}\
+\
+        .nav-btn.hidden \{\
+            display: none;\
+        \}\
+\
+        /* =========================================\
+           SISTEMA DE DIAPOSITIVAS\
+           ========================================= */\
+        #slides-container \{\
+            flex-grow: 1;\
+            position: relative;\
+            width: 100%;\
+            height: 100%;\
+        \}\
+\
+        .slide \{\
+            position: absolute;\
+            top: 0; left: 0; width: 100%; height: 100%;\
+            padding: 40px 80px; /* Espacio para no chocar con flechas */\
+            display: none;\
+            flex-direction: column;\
+            justify-content: center;\
+            align-items: center;\
+            text-align: center;\
+            animation: fadeIn 0.4s ease-in-out;\
+            background-color: var(--color-fondo-claro);\
+        \}\
+\
+        .slide.active \{\
+            display: flex;\
+        \}\
+\
+        @keyframes fadeIn \{\
+            from \{ opacity: 0; transform: scale(0.98); \}\
+            to \{ opacity: 1; transform: scale(1); \}\
+        \}\
+\
+        /* =========================================\
+           TIPOGRAF\'cdA Y ESTILOS DE CONTENIDO\
+           ========================================= */\
+        h1, h2, h3 \{\
+            color: var(--color-azul-oscuro);\
+            margin-bottom: 20px;\
+            font-weight: bold;\
+        \}\
+\
+        h1 \{ font-size: 2.5rem; \}\
+        h2 \{ font-size: 2rem; color: var(--color-naranja); \}\
+        h3 \{ font-size: 1.5rem; \}\
+\
+        p \{\
+            font-size: 1.2rem;\
+            color: #333;\
+            line-height: 1.6;\
+            margin-bottom: 15px;\
+            max-width: 700px;\
+        \}\
+\
+        .highlight \{\
+            color: var(--color-rojo);\
+            font-weight: bold;\
+        \}\
+\
+        /* Header de Lecci\'f3n */\
+        .lesson-header \{\
+            background: linear-gradient(135deg, var(--color-azul-oscuro), #3a6b7e);\
+            color: var(--color-blanco);\
+            padding: 10px 20px;\
+            border-radius: 20px;\
+            font-size: 1rem;\
+            font-weight: bold;\
+            margin-bottom: 20px;\
+            display: inline-block;\
+        \}\
+\
+        /* =========================================\
+           COMPONENTES VISUALES E INTERACTIVOS\
+           ========================================= */\
+        .btn-action \{\
+            background-color: var(--color-amarillo);\
+            color: var(--color-azul-oscuro);\
+            border: 2px solid var(--color-azul-oscuro);\
+            padding: 12px 24px;\
+            font-size: 1.2rem;\
+            font-weight: bold;\
+            border-radius: 30px;\
+            cursor: pointer;\
+            transition: all 0.2s;\
+            margin: 10px;\
+        \}\
+\
+        .btn-action:hover \{\
+            background-color: var(--color-naranja);\
+            color: var(--color-blanco);\
+            border-color: var(--color-naranja);\
+        \}\
+\
+        .btn-action:active \{\
+            transform: scale(0.95);\
+        \}\
+\
+        .feedback-box \{\
+            margin-top: 20px;\
+            padding: 15px;\
+            border-radius: 10px;\
+            font-weight: bold;\
+            display: none;\
+            width: 100%;\
+            max-width: 500px;\
+        \}\
+\
+        .feedback-success \{\
+            background-color: #d4edda;\
+            color: #155724;\
+            border: 2px solid #c3e6cb;\
+        \}\
+\
+        .feedback-error \{\
+            background-color: #f8d7da;\
+            color: #721c24;\
+            border: 2px solid #f5c6cb;\
+        \}\
+\
+        /* \'cdconos (SVGs Inline para independencia) */\
+        .icon \{\
+            width: 80px;\
+            height: 80px;\
+            margin-bottom: 20px;\
+        \}\
+\
+        /* Tarjetas de Palabras Clave */\
+        .card-container \{\
+            display: flex;\
+            gap: 20px;\
+            justify-content: center;\
+            flex-wrap: wrap;\
+        \}\
+        \
+        .card \{\
+            background-color: var(--color-blanco);\
+            border-radius: 12px;\
+            padding: 20px;\
+            width: 200px;\
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);\
+            border-top: 5px solid var(--color-naranja);\
+        \}\
+\
+        /* Exploraci\'f3n Visual */\
+        .explore-container \{\
+            display: flex;\
+            align-items: center;\
+            justify-content: center;\
+            gap: 30px;\
+            margin-top: 20px;\
+            width: 100%;\
+        \}\
+        \
+        .explore-buttons \{\
+            display: flex;\
+            flex-direction: column;\
+            gap: 15px;\
+        \}\
+        \
+        .explore-display \{\
+            background-color: var(--color-blanco);\
+            border: 3px dashed var(--color-amarillo);\
+            padding: 20px;\
+            border-radius: 15px;\
+            width: 300px;\
+            height: 200px;\
+            display: flex;\
+            justify-content: center;\
+            align-items: center;\
+            font-size: 1.1rem;\
+            color: var(--color-azul-oscuro);\
+        \}\
+\
+        /* Lista de Ordenamiento (Juego) */\
+        .sort-item \{\
+            background-color: var(--color-blanco);\
+            border: 2px solid var(--color-azul-oscuro);\
+            padding: 15px;\
+            margin: 10px 0;\
+            border-radius: 10px;\
+            cursor: pointer;\
+            font-size: 1.2rem;\
+            display: flex;\
+            align-items: center;\
+            transition: background-color 0.2s;\
+            width: 100%;\
+            max-width: 400px;\
+            text-align: left;\
+        \}\
+        .sort-item:hover \{ background-color: #f0f0f0; \}\
+        .sort-number \{\
+            background-color: var(--color-rojo);\
+            color: white;\
+            width: 30px;\
+            height: 30px;\
+            border-radius: 50%;\
+            display: flex;\
+            justify-content: center;\
+            align-items: center;\
+            margin-right: 15px;\
+            font-weight: bold;\
+            visibility: hidden; /* Se muestra al hacer clic */\
+        \}\
+        .sort-item.selected \{ border-color: var(--color-naranja); \}\
+        .sort-item.selected .sort-number \{ visibility: visible; \}\
+\
+        /* Metacognici\'f3n */\
+        .thought-bubble \{\
+            background-color: var(--color-blanco);\
+            border-radius: 30px;\
+            padding: 20px;\
+            position: relative;\
+            margin: 10px;\
+            border: 2px solid var(--color-azul-oscuro);\
+        \}\
+\
+        /* Adaptaci\'f3n a m\'f3viles */\
+        @media (max-width: 768px) \{\
+            h1 \{ font-size: 2rem; \}\
+            h2 \{ font-size: 1.5rem; \}\
+            p \{ font-size: 1rem; \}\
+            .slide \{ padding: 20px 50px; \}\
+            .nav-btn \{ width: 40px; height: 60px; font-size: 1.5rem; \}\
+            .explore-container \{ flex-direction: column; \}\
+        \}\
+    </style>\
+</head>\
+<body>\
+\
+<div id="app-container">\
+    \
+    <!-- Controles de Navegaci\'f3n -->\
+    <button id="prevBtn" class="nav-btn hidden" onclick="changeSlide(-1)">&#11013;</button>\
+    <button id="nextBtn" class="nav-btn" onclick="changeSlide(1)">&#11157;</button>\
+\
+    <div id="slides-container">\
+\
+        <!-- DIAPOSITIVA 1: Portada -->\
+        <div class="slide active" id="slide-0">\
+            <div class="lesson-header">Ciencias Naturales | 4\'b0 Primaria | Lecci\'f3n 17</div>\
+            <!-- \'cdcono Escudo/Vacuna -->\
+            <svg class="icon" viewBox="0 0 24 24" fill="var(--color-naranja)">\
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>\
+            </svg>\
+            <h1>Las Vacunas: Nuestro Escudo Protector</h1>\
+            <p>\'a1Hola! Hoy descubriremos c\'f3mo nuestro cuerpo se entrena para luchar contra las enfermedades y mantenerse fuerte.</p>\
+            <p style="color: var(--color-rojo); font-weight: bold; margin-top: 20px;">Usa las flechas laterales para comenzar a explorar.</p>\
+        </div>\
+\
+        <!-- DIAPOSITIVA 2: Objetivos -->\
+        <div class="slide" id="slide-1">\
+            <h2>\uc0\u55356 \u57263  \'bfQu\'e9 aprenderemos hoy?</h2>\
+            <div style="background-color: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: left; max-width: 600px;">\
+                <p>Al terminar esta lecci\'f3n, ser\'e1s capaz de:</p>\
+                <ul style="list-style-type: none; padding: 0;">\
+                    <li style="font-size: 1.2rem; margin-bottom: 15px;">\uc0\u9989  Entender <strong>qu\'e9 son</strong> las vacunas.</li>\
+                    <li style="font-size: 1.2rem; margin-bottom: 15px;">\uc0\u9989  Explicar <strong>c\'f3mo protegen</strong> a nuestro cuerpo.</li>\
+                    <li style="font-size: 1.2rem;">\uc0\u9989  Valorar la importancia de vacunarse para cuidar nuestra salud.</li>\
+                </ul>\
+            </div>\
+        </div>\
+\
+        <!-- DIAPOSITIVA 3: Activaci\'f3n -->\
+        <div class="slide" id="slide-2">\
+            <h2>\uc0\u55358 \u56596  Para pensar...</h2>\
+            <!-- \'cdcono de doctor/pensar -->\
+            <svg class="icon" style="fill: var(--color-azul-oscuro);" viewBox="0 0 24 24">\
+                <path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>\
+            </svg>\
+            <p>\'bfRecuerdas la \'faltima vez que fuiste al m\'e9dico y te pincharon el brazo o la pierna?</p>\
+            <p>A veces duele un poquitito, como el piquete de un mosquito, pero... <strong>\'bfSabes por qu\'e9 lo hacen? \'bfQu\'e9 magia entra en tu cuerpo en ese momento?</strong></p>\
+        </div>\
+\
+        <!-- DIAPOSITIVA 4: Palabras clave -->\
+        <div class="slide" id="slide-3">\
+            <h2>\uc0\u55357 \u56593  Palabras Clave</h2>\
+            <p>Antes de empezar, conozcamos a los protagonistas de hoy:</p>\
+            <div class="card-container">\
+                <div class="card">\
+                    <h3 style="color: var(--color-naranja);">\uc0\u55358 \u56736  G\'e9rmenes</h3>\
+                    <p style="font-size: 1rem;">Bichitos diminutos (virus o bacterias) que nos pueden enfermar.</p>\
+                </div>\
+                <div class="card">\
+                    <h3 style="color: var(--color-naranja);">\uc0\u55357 \u57057 \u65039  Inmunidad</h3>\
+                    <p style="font-size: 1rem;">La capacidad del cuerpo para defenderse y no enfermarse.</p>\
+                </div>\
+                <div class="card">\
+                    <h3 style="color: var(--color-naranja);">\uc0\u9876 \u65039  Anticuerpos</h3>\
+                    <p style="font-size: 1rem;">Nuestros "soldaditos" internos que atacan a los g\'e9rmenes.</p>\
+                </div>\
+            </div>\
+        </div>\
+\
+        <!-- DIAPOSITIVA 5: Contenido 1 -->\
+        <div class="slide" id="slide-4">\
+            <h2>\'bfQu\'e9 es una vacuna?</h2>\
+            <svg class="icon" style="fill: var(--color-rojo); width: 60px; height: 60px;" viewBox="0 0 24 24">\
+                <path d="M19.3 4.7l-4-4L14 2l1.6 1.6-4.6 4.6-2.5-1.1-1.4 1.4 1.8 4.2L2.6 19.3l2.1 2.1 6.6-6.3 4.2 1.8 1.4-1.4-1.1-2.5 4.6-4.6L22 10l-2.7-5.3zM9.5 13.9l-2.8-1.2 1.2-2.8.8.8-1.4 1.4 1.4 1.4-1.4 1.4 2.2 2.2zm7-7l-1.4 1.4-1.4-1.4 1.4-1.4-.8-.8 2.8-1.2 1.2 2.8-.8-.8z"/>\
+            </svg>\
+            <p>Una vacuna es como una <strong>sesi\'f3n de entrenamiento</strong> para tu cuerpo.</p>\
+            <p>Las vacunas contienen un pedacito muy peque\'f1o, d\'e9bil o "dormido" del germen que causa una enfermedad.</p>\
+            <p>Al estar tan d\'e9bil, <span class="highlight">NO te enfermar\'e1</span>, pero le servir\'e1 a tu cuerpo para aprender a reconocerlo.</p>\
+        </div>\
+\
+        <!-- DIAPOSITIVA 6: Contenido 2 -->\
+        <div class="slide" id="slide-5">\
+            <h2>\'bfC\'f3mo funcionan?</h2>\
+            <p>Imagina que tu cuerpo es un castillo. As\'ed funciona la defensa:</p>\
+            <div style="text-align: left; display: inline-block; background: white; padding: 20px; border-radius: 10px;">\
+                <p><strong>1. La alerta:</strong> Entra la vacuna (el germen d\'e9bil).</p>\
+                <p><strong>2. El entrenamiento:</strong> Tus defensas (anticuerpos) lo ven, lo estudian y lo vencen f\'e1cilmente.</p>\
+                <p><strong>3. La memoria:</strong> Tu cuerpo guarda el "plan de ataque".</p>\
+                <p><strong>4. La protecci\'f3n real:</strong> Si el germen fuerte intenta entrar de verdad en el futuro, \'a1tu cuerpo ya sabe c\'f3mo destruirlo antes de que te enfermes!</p>\
+            </div>\
+        </div>\
+\
+        <!-- DIAPOSITIVA 7: Exploraci\'f3n Visual -->\
+        <div class="slide" id="slide-6">\
+            <h2>\uc0\u55357 \u56589  Exploraci\'f3n Visual</h2>\
+            <p>Haz clic en los botones para explorar el proceso en el cuerpo:</p>\
+            \
+            <div class="explore-container">\
+                <div class="explore-buttons">\
+                    <button class="btn-action" onclick="showExplore('vacuna')">1. Entra la Vacuna</button>\
+                    <button class="btn-action" onclick="showExplore('anticuerpos')">2. Creando Defensas</button>\
+                    <button class="btn-action" onclick="showExplore('memoria')">3. Memoria Inmunol\'f3gica</button>\
+                </div>\
+                <div class="explore-display" id="explore-text">\
+                    <em>Haz clic en un bot\'f3n a la izquierda para ver qu\'e9 sucede.</em>\
+                </div>\
+            </div>\
+        </div>\
+\
+        <!-- DIAPOSITIVA 8: Actividad de comprensi\'f3n -->\
+        <div class="slide" id="slide-7">\
+            <h2>\uc0\u55358 \u56800  Actividad de Comprensi\'f3n</h2>\
+            <p>Demuestra lo que has aprendido. Toca la respuesta correcta:</p>\
+            <p style="font-weight: bold; font-size: 1.4rem; margin-top: 10px;">\'bfQu\'e9 contiene realmente una vacuna?</p>\
+            \
+            <button class="btn-action" style="width: 80%; max-width: 400px; display: block; margin: 10px auto;" onclick="checkAnswer('A', 'q1')">A) Agua m\'e1gica que cura todo.</button>\
+            <button class="btn-action" style="width: 80%; max-width: 400px; display: block; margin: 10px auto;" onclick="checkAnswer('B', 'q1')">B) G\'e9rmenes d\'e9biles o inactivos para entrenar al cuerpo.</button>\
+            <button class="btn-action" style="width: 80%; max-width: 400px; display: block; margin: 10px auto;" onclick="checkAnswer('C', 'q1')">C) Az\'facar l\'edquida para darnos energ\'eda.</button>\
+\
+            <div id="feedback-q1" class="feedback-box"></div>\
+        </div>\
+\
+        <!-- DIAPOSITIVA 9: Juego Educativo -->\
+        <div class="slide" id="slide-8">\
+            <h2>\uc0\u55356 \u57262  Juego: Ordena la Historia</h2>\
+            <p>Haz clic en las acciones en el <strong>orden correcto</strong> en que suceden:</p>\
+            \
+            <div id="sort-container">\
+                <div class="sort-item" onclick="selectSort(this, 'b')">\
+                    <div class="sort-number"></div> El cuerpo fabrica anticuerpos (soldaditos).\
+                </div>\
+                <div class="sort-item" onclick="selectSort(this, 'c')">\
+                    <div class="sort-number"></div> Tu cuerpo guarda memoria y te protege en el futuro.\
+                </div>\
+                <div class="sort-item" onclick="selectSort(this, 'a')">\
+                    <div class="sort-number"></div> Recibes la vacuna en tu brazo.\
+                </div>\
+            </div>\
+\
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">\
+                <button class="btn-action" onclick="checkSort()" style="background-color: var(--color-naranja); color: white;">Verificar</button>\
+                <button class="btn-action" onclick="resetSort()">Reiniciar</button>\
+            </div>\
+\
+            <div id="feedback-sort" class="feedback-box"></div>\
+        </div>\
+\
+        <!-- DIAPOSITIVA 10: Aplicaci\'f3n Pr\'e1ctica -->\
+        <div class="slide" id="slide-9">\
+            <h2>\uc0\u55357 \u56481  Aplicaci\'f3n Pr\'e1ctica</h2>\
+            <p>Situaci\'f3n: Tu amiga Mar\'eda tiene que vacunarse ma\'f1ana y est\'e1 muy asustada. Dice que prefiere enfermarse a que la pinchen.</p>\
+            <p style="font-weight: bold;">\'bfQu\'e9 le dir\'edas para ayudarla a entender?</p>\
+\
+            <button class="btn-action" style="width: 90%; max-width: 500px; display: block; margin: 10px auto; font-size: 1.1rem; text-align: left;" onclick="checkAnswer('A', 'q2')">\
+                "No vayas, enfermarse es mejor y pasa r\'e1pido."\
+            </button>\
+            <button class="btn-action" style="width: 90%; max-width: 500px; display: block; margin: 10px auto; font-size: 1.1rem; text-align: left;" onclick="checkAnswer('B', 'q2')">\
+                "Es un pinchazo r\'e1pido. Te da un escudo protector para que no te enfermes muy grave en el futuro."\
+            </button>\
+\
+            <div id="feedback-q2" class="feedback-box"></div>\
+        </div>\
+\
+        <!-- DIAPOSITIVA 11: Repaso final -->\
+        <div class="slide" id="slide-10">\
+            <h2>\uc0\u55357 \u56541  Repaso Final: Verdadero o Falso</h2>\
+            <p>Toca la opci\'f3n correcta para esta afirmaci\'f3n:</p>\
+            <div style="background: white; padding: 20px; border-radius: 10px; border: 2px solid var(--color-amarillo); margin: 20px 0;">\
+                <p style="font-size: 1.3rem; font-weight: bold; margin: 0;">"Las vacunas nos enferman para hacernos m\'e1s fuertes."</p>\
+            </div>\
+            \
+            <div style="display: flex; justify-content: center; gap: 20px;">\
+                <button class="btn-action" style="width: 150px; background-color: #28a745; color: white; border: none;" onclick="checkAnswer('A', 'q3')">Verdadero</button>\
+                <button class="btn-action" style="width: 150px; background-color: #dc3545; color: white; border: none;" onclick="checkAnswer('B', 'q3')">Falso</button>\
+            </div>\
+\
+            <div id="feedback-q3" class="feedback-box"></div>\
+        </div>\
+\
+        <!-- DIAPOSITIVA 12: Metacognici\'f3n y Cierre -->\
+        <div class="slide" id="slide-11">\
+            <h2 style="font-size: 2.5rem; color: var(--color-azul-oscuro);">\'a1Misi\'f3n Cumplida! \uc0\u55356 \u57286 </h2>\
+            <svg class="icon" style="fill: var(--color-amarillo); width: 100px; height: 100px;" viewBox="0 0 24 24">\
+                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>\
+            </svg>\
+            <p style="font-size: 1.5rem; color: var(--color-naranja); font-weight: bold;">\'a1Felicidades, estudiante de Escolaris!</p>\
+            <p>Hoy aprendiste c\'f3mo funciona el escudo protector de tu cuerpo.</p>\
+            \
+            <div class="thought-bubble" style="margin-top: 30px;">\
+                <p style="margin: 0; font-weight: bold; color: var(--color-azul-oscuro);">Para pensar en casa:</p>\
+                <p style="margin: 5px 0 0 0; font-size: 1rem;">\'bfQu\'e9 fue lo que m\'e1s te sorprendi\'f3 de las vacunas hoy?</p>\
+            </div>\
+        </div>\
+\
+    </div>\
+</div>\
+\
+<script>\
+    /* =========================================\
+       L\'d3GICA DE NAVEGACI\'d3N\
+       ========================================= */\
+    let currentSlide = 0;\
+    const slides = document.querySelectorAll('.slide');\
+    const prevBtn = document.getElementById('prevBtn');\
+    const nextBtn = document.getElementById('nextBtn');\
+    const totalSlides = slides.length;\
+\
+    function updateNavigation() \{\
+        // Ocultar todas las diapositivas\
+        slides.forEach(slide => slide.classList.remove('active'));\
+        // Mostrar la actual\
+        slides[currentSlide].classList.add('active');\
+\
+        // Mostrar/Ocultar flechas\
+        if (currentSlide === 0) \{\
+            prevBtn.classList.add('hidden');\
+        \} else \{\
+            prevBtn.classList.remove('hidden');\
+        \}\
+\
+        if (currentSlide === totalSlides - 1) \{\
+            nextBtn.classList.add('hidden');\
+        \} else \{\
+            nextBtn.classList.remove('hidden');\
+        \}\
+    \}\
+\
+    function changeSlide(direction) \{\
+        currentSlide += direction;\
+        // Limites de seguridad\
+        if (currentSlide < 0) currentSlide = 0;\
+        if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;\
+        \
+        updateNavigation();\
+        resetActivitiesOnSlideChange();\
+    \}\
+\
+    function resetActivitiesOnSlideChange() \{\
+        // Limpia el feedback al cambiar de p\'e1gina\
+        const feedbacks = document.querySelectorAll('.feedback-box');\
+        feedbacks.forEach(box => \{\
+            box.style.display = 'none';\
+            box.className = 'feedback-box'; // reset classes\
+        \});\
+    \}\
+\
+    /* =========================================\
+       L\'d3GICA EXPLORACI\'d3N VISUAL\
+       ========================================= */\
+    function showExplore(type) \{\
+        const display = document.getElementById('explore-text');\
+        if (type === 'vacuna') \{\
+            display.innerHTML = '<strong style="color: var(--color-naranja);">1. Entra la Vacuna</strong><br><br>Un l\'edquido con g\'e9rmenes muy d\'e9biles entra a tu cuerpo. \'a1No tienen fuerza para enfermarte!';\
+        \} else if (type === 'anticuerpos') \{\
+            display.innerHTML = '<strong style="color: var(--color-naranja);">2. Creando Defensas</strong><br><br>Tus gl\'f3bulos blancos ven al intruso y fabrican "anticuerpos", como soldaditos con escudos y espadas a medida para atraparlo.';\
+        \} else if (type === 'memoria') \{\
+            display.innerHTML = '<strong style="color: var(--color-naranja);">3. Memoria Inmunol\'f3gica</strong><br><br>El intruso d\'e9bil es destruido. Tu cuerpo guarda un registro. \'a1Si el germen fuerte aparece a\'f1os despu\'e9s, tus defensas lo atrapar\'e1n r\'e1pido!';\
+        \}\
+    \}\
+\
+    /* =========================================\
+       L\'d3GICA QUIZZES M\'daLTIPLE OPCI\'d3N\
+       ========================================= */\
+    function checkAnswer(answer, questionId) \{\
+        const feedbackBox = document.getElementById(`feedback-$\{questionId\}`);\
+        feedbackBox.style.display = 'block';\
+        feedbackBox.className = 'feedback-box'; // reset\
+\
+        if (questionId === 'q1') \{\
+            if (answer === 'B') \{\
+                feedbackBox.innerHTML = '\'a1Correcto! \uc0\u55356 \u57225  Entrenan a tu cuerpo de forma segura.';\
+                feedbackBox.classList.add('feedback-success');\
+            \} else \{\
+                feedbackBox.innerHTML = 'Mmm, no es exacto. Intenta leer de nuevo y selecciona otra opci\'f3n. \uc0\u55357 \u56577 ';\
+                feedbackBox.classList.add('feedback-error');\
+            \}\
+        \} \
+        else if (questionId === 'q2') \{\
+            if (answer === 'B') \{\
+                feedbackBox.innerHTML = '\'a1Excelente consejo! \uc0\u55356 \u57119  Ayudar a entender quita el miedo.';\
+                feedbackBox.classList.add('feedback-success');\
+            \} else \{\
+                feedbackBox.innerHTML = 'Piensa como un buen amigo de Escolaris. \'bfEstar enfermo es realmente mejor? \'a1Intenta de nuevo! \uc0\u55357 \u56577 ';\
+                feedbackBox.classList.add('feedback-error');\
+            \}\
+        \}\
+        else if (questionId === 'q3') \{\
+            if (answer === 'B') \{\
+                feedbackBox.innerHTML = '\'a1Correcto! Es FALSO. Las vacunas tienen g\'e9rmenes tan d\'e9biles que NO nos enferman, solo nos entrenan. \uc0\u55357 \u57057 \u65039 ';\
+                feedbackBox.classList.add('feedback-success');\
+            \} else \{\
+                feedbackBox.innerHTML = 'Pi\'e9nsalo bien. Si nos enfermaran de verdad, \'a1no ser\'edan una medicina protectora! Intenta de nuevo. \uc0\u55357 \u56577 ';\
+                feedbackBox.classList.add('feedback-error');\
+            \}\
+        \}\
+    \}\
+\
+    /* =========================================\
+       L\'d3GICA JUEGO ORDENAR PASOS (TAPS)\
+       ========================================= */\
+    let currentSortOrder = [];\
+    \
+    function selectSort(element, id) \{\
+        // Si ya est\'e1 seleccionado, no hacer nada\
+        if (element.classList.contains('selected')) return;\
+\
+        // A\'f1adir a la lista de seleccionados\
+        currentSortOrder.push(id);\
+        \
+        // Estilos visuales\
+        element.classList.add('selected');\
+        const numCircle = element.querySelector('.sort-number');\
+        numCircle.innerText = currentSortOrder.length;\
+\
+        // Limpiar feedback anterior\
+        document.getElementById('feedback-sort').style.display = 'none';\
+    \}\
+\
+    function checkSort() \{\
+        const feedbackBox = document.getElementById('feedback-sort');\
+        feedbackBox.style.display = 'block';\
+        feedbackBox.className = 'feedback-box';\
+\
+        if (currentSortOrder.length < 3) \{\
+            feedbackBox.innerHTML = '\uc0\u9888 \u65039  Por favor, selecciona los 3 pasos primero.';\
+            feedbackBox.classList.add('feedback-error');\
+            return;\
+        \}\
+\
+        // El orden correcto esperado es 'a' (recibes vacuna), 'b' (cuerpo fabrica), 'c' (memoria)\
+        const isCorrect = currentSortOrder[0] === 'a' && currentSortOrder[1] === 'b' && currentSortOrder[2] === 'c';\
+\
+        if (isCorrect) \{\
+            feedbackBox.innerHTML = '\'a1Perfecto! \uc0\u55358 \u56647  Has ordenado correctamente el proceso.';\
+            feedbackBox.classList.add('feedback-success');\
+        \} else \{\
+            feedbackBox.innerHTML = 'Ese no es el orden correcto. Pista: Primero debe entrar la vacuna. \'a1Haz clic en Reiniciar y vuelve a intentarlo! \uc0\u55357 \u56577 ';\
+            feedbackBox.classList.add('feedback-error');\
+        \}\
+    \}\
+\
+    function resetSort() \{\
+        currentSortOrder = [];\
+        const items = document.querySelectorAll('.sort-item');\
+        items.forEach(item => \{\
+            item.classList.remove('selected');\
+            item.querySelector('.sort-number').innerText = '';\
+        \});\
+        document.getElementById('feedback-sort').style.display = 'none';\
+    \}\
+\
+    // Inicializaci\'f3n\
+    updateNavigation();\
+\
+</script>\
+</body>\
+</html>}
